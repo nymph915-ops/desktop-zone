@@ -5,7 +5,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# QFileInfo를 QtCore에서 import하도록 수정
 from PySide6.QtCore import Qt, QTimer, QUrl, QPoint, QFileInfo
 from PySide6.QtGui import QDesktopServices, QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
@@ -554,4 +553,11 @@ class ZoneManager(QWidget):
                     if not isinstance(paths, list):
                         paths = []
 
-                    used_ids.add
+                    used_ids.add(zone_id)
+                    self.next_zone_id = max(self.next_zone_id, zone_id + 1)
+
+                    zone = ZoneWidget(self, zone_id, title, *geometry)
+                    self.zones[zone_id] = zone
+                    zone.load_paths(paths)
+
+                except
