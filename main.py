@@ -480,11 +480,11 @@ class ZoneManager(QWidget):
 
             os.replace(temp_file, CONFIG_FILE)
 
-        except (OSError, TypeError, ValueError) as error:
+        except Exception as error:
             try:
                 if temp_file.exists():
                     temp_file.unlink()
-            except OSError:
+            except Exception:
                 pass
 
             QMessageBox.warning(
@@ -508,14 +508,14 @@ class ZoneManager(QWidget):
             if not isinstance(saved_zones, list):
                 raise ValueError("구역 목록 형식이 올바르지 않습니다.")
 
-        except (OSError, json.JSONDecodeError, ValueError) as error:
+        except Exception as error:
             backup = unique_backup_path(CONFIG_FILE)
             backup_message = ""
 
             try:
                 shutil.copy2(CONFIG_FILE, backup)
                 backup_message = f"\n백업 파일: {backup}"
-            except OSError as backup_error:
+            except Exception as backup_error:
                 backup_message = f"\n백업 실패: {backup_error}"
 
             QMessageBox.warning(
@@ -560,4 +560,36 @@ class ZoneManager(QWidget):
                     self.zones[zone_id] = zone
                     zone.load_paths(paths)
 
-                except
+                except Exception:
+                    continue
+
+            try:
+                saved_next_id = int(data.get("next_zone_id", 1))
+                self.next_zone_id = max(self.next_zone_id, saved_next_id, 1)
+            except Exception:
+                pass
+
+        finally:
+            self._loading = False
+
+    def closeEvent(self, event):
+        self.save_config()
+
+        for zone in list(self.zones.values()):
+            zone.close()
+
+        event.accept()
+
+
+def main():
+    app = QApplication(sys.argv)
+    app.setApplicationName("Desktop Zones")
+
+    manager = ZoneManager()
+    manager.show()
+
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
