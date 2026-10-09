@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QUrl, QPoint, QFileInfo
-from PySide6.QtGui import QDesktopServices, QDragEnterEvent, QDropEvent
+from PySide6.QtGui import QDesktopServices, QDragEnterEvent, QDropEvent, QGuiApplication
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -190,8 +190,8 @@ class ZoneWidget(QWidget):
         self.resize_save_timer.timeout.connect(self.save_after_resize)
 
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.Tool
+            Qt.WindowType.Window
+            | Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnBottomHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -409,13 +409,30 @@ class ZoneManager(QWidget):
         layout.addWidget(self.add_button)
         layout.addWidget(self.save_button)
 
+    def get_safe_geometry(self, raw_geo):
+        screen = QGuiApplication.primaryScreen()
+        if not screen:
+            return raw_geo
+
+        screen_geo = screen.availableGeometry()
+        x, y, w, h = raw_geo
+
+        if x < screen_geo.left() or x + w > screen_geo.right():
+            x = screen_geo.left() + 50 + (len(self.zones) % 5) * 30
+        if y < screen_geo.top() or y + h > screen_geo.bottom():
+            y = screen_geo.top() + 50 + (len(self.zones) % 5) * 30
+
+        return (x, y, w, h)
+
     def add_zone(self, title=None, geometry=None, paths=None):
         zone_id = self.next_zone_id
         self.next_zone_id += 1
 
         if geometry is None:
-            offset = (len(self.zones) % 8) * 25
+            offset = (len(self.zones) % 8) * 30
             geometry = (100 + offset, 100 + offset, 260, 320)
+
+        geometry = self.get_safe_geometry(geometry)
 
         if title is None:
             title = f"구역 {zone_id}"
@@ -427,6 +444,8 @@ class ZoneManager(QWidget):
             zone.load_paths(paths)
 
         zone.show()
+        zone.raise_()
+        zone.activateWindow()
 
         if not self._loading:
             self.save_config()
