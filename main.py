@@ -409,30 +409,32 @@ class ZoneManager(QWidget):
         layout.addWidget(self.add_button)
         layout.addWidget(self.save_button)
 
-    def get_safe_geometry(self, raw_geo):
+    def calculate_new_position(self):
+        """기존 구역들과 겹치지 않도록 계단식 오프셋 좌표를 계산합니다."""
+        base_x = 100
+        base_y = 100
+        step = 50
+        
+        count = len(self.zones)
+        x = base_x + (count * step) % 400
+        y = base_y + (count * step) % 300
+
         screen = QGuiApplication.primaryScreen()
-        if not screen:
-            return raw_geo
+        if screen:
+            geo = screen.availableGeometry()
+            if x + 260 > geo.right():
+                x = geo.left() + 50
+            if y + 320 > geo.bottom():
+                y = geo.top() + 50
 
-        screen_geo = screen.availableGeometry()
-        x, y, w, h = raw_geo
-
-        if x < screen_geo.left() or x + w > screen_geo.right():
-            x = screen_geo.left() + 50 + (len(self.zones) % 5) * 30
-        if y < screen_geo.top() or y + h > screen_geo.bottom():
-            y = screen_geo.top() + 50 + (len(self.zones) % 5) * 30
-
-        return (x, y, w, h)
+        return (x, y, 260, 320)
 
     def add_zone(self, title=None, geometry=None, paths=None):
         zone_id = self.next_zone_id
         self.next_zone_id += 1
 
         if geometry is None:
-            offset = (len(self.zones) % 8) * 30
-            geometry = (100 + offset, 100 + offset, 260, 320)
-
-        geometry = self.get_safe_geometry(geometry)
+            geometry = self.calculate_new_position()
 
         if title is None:
             title = f"구역 {zone_id}"
@@ -444,6 +446,9 @@ class ZoneManager(QWidget):
             zone.load_paths(paths)
 
         zone.show()
+        
+        # 새로 추가된 구역이 잘 보이도록 시각적 처리
+        zone.setWindowState(zone.windowState() & ~Qt.WindowState.WindowMinimized | Qt.WindowState.WindowActive)
         zone.raise_()
         zone.activateWindow()
 
