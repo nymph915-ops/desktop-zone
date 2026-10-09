@@ -5,7 +5,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, QUrl, QPoint
+# QFileInfo를 QtCore에서 import하도록 수정
+from PySide6.QtCore import Qt, QTimer, QUrl, QPoint, QFileInfo
 from PySide6.QtGui import QDesktopServices, QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -19,7 +20,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QSizeGrip,
     QFileIconProvider,
-    QFileInfo,
     QMessageBox,
     QInputDialog,
 )
@@ -554,43 +554,4 @@ class ZoneManager(QWidget):
                     if not isinstance(paths, list):
                         paths = []
 
-                    used_ids.add(zone_id)
-                    self.next_zone_id = max(self.next_zone_id, zone_id + 1)
-
-                    zone = ZoneWidget(self, zone_id, title, *geometry)
-                    self.zones[zone_id] = zone
-                    zone.load_paths(paths)
-
-                except (TypeError, ValueError, OverflowError):
-                    continue
-
-            try:
-                saved_next_id = int(data.get("next_zone_id", 1))
-                self.next_zone_id = max(self.next_zone_id, saved_next_id, 1)
-            except (TypeError, ValueError, OverflowError):
-                pass
-
-        finally:
-            self._loading = False
-
-    def closeEvent(self, event):
-        self.save_config()
-
-        for zone in list(self.zones.values()):
-            zone.close()
-
-        event.accept()
-
-
-def main():
-    app = QApplication(sys.argv)
-    app.setApplicationName("Desktop Zones")
-
-    manager = ZoneManager()
-    manager.show()
-
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
+                    used_ids.add
