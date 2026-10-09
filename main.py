@@ -176,8 +176,7 @@ class ZoneWidget(QWidget):
         width=260,
         height=320,
     ):
-        # parent를 None으로 설정하여 독립 최상위 윈도우로 동작
-        super().__init__(None)
+        super().__init__(None)  # Parent를 제거하여 완전히 독립된 메인 윈도우로 동작
 
         self.manager = manager
         self.zone_id = zone_id
@@ -190,10 +189,10 @@ class ZoneWidget(QWidget):
         self.resize_save_timer.setInterval(300)
         self.resize_save_timer.timeout.connect(self.save_after_resize)
 
-        # FramelessWindowHint 적용하여 창 테두리 제거
+        # Frameless 창 플래그만 설정 (StaysOnBottom 제거)
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.Tool
+            Qt.WindowType.Window
+            | Qt.WindowType.FramelessWindowHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setMinimumSize(190, 160)
@@ -400,7 +399,8 @@ class ZoneManager(QWidget):
         description.setWordWrap(True)
 
         self.add_button = QPushButton("＋ 구역 추가")
-        self.add_button.clicked.connect(self.add_zone)
+        # 시그널 중복 방지: clicked 매핑 단일화
+        self.add_button.clicked.connect(lambda: self.add_zone())
 
         self.save_button = QPushButton("설정 저장")
         self.save_button.clicked.connect(self.save_config)
@@ -411,9 +411,10 @@ class ZoneManager(QWidget):
         layout.addWidget(self.save_button)
 
     def calculate_new_position(self):
+        """새 구역 생성 시 60px씩 계단식 오프셋 적용"""
         base_x = 150
         base_y = 150
-        step = 40
+        step = 60
 
         count = len(self.zones)
         x = base_x + (count * step) % 500
