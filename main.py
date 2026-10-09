@@ -93,6 +93,7 @@ class DropListWidget(QListWidget):
         super().__init__(zone)
         self.zone = zone
 
+        # IconMode 설정 및 배치 옵션 최적화
         self.setViewMode(QListWidget.ViewMode.IconMode)
         self.setIconSize(QSize(48, 48))
         self.setGridSize(QSize(76, 80))
@@ -100,9 +101,8 @@ class DropListWidget(QListWidget):
         self.setResizeMode(QListWidget.ResizeMode.Adjust)
         self.setWordWrap(True)
 
-        self.setAcceptDrops(True)
-        self.setDragEnabled(False)
-        self.setDropIndicatorShown(False)
+        # 위젯 자체 드롭 수용 차단 (상위 ZoneWidget에서 일괄 수용)
+        self.setAcceptDrops(False)
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setSpacing(4)
         self.itemDoubleClicked.connect(self.open_item)
@@ -136,39 +136,6 @@ class DropListWidget(QListWidget):
                 event.accept()
                 return
         super().keyPressEvent(event)
-
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-            event.accept()
-        else:
-            event.ignore()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event: QDropEvent):
-        if not event.mimeData().hasUrls():
-            event.ignore()
-            return
-
-        added_any = False
-        for url in event.mimeData().urls():
-            if url.isLocalFile():
-                path = url.toLocalFile()
-                if os.path.exists(path):
-                    self.zone.add_path(path)
-                    added_any = True
-
-        if added_any:
-            event.acceptProposedAction()
-            event.accept()
-        else:
-            event.ignore()
 
     def open_item(self, item):
         path = item.data(Qt.ItemDataRole.UserRole)
@@ -222,7 +189,9 @@ class ZoneWidget(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setMinimumSize(190, 160)
-        self.setAcceptDrops(False)
+        
+        # 구역 창 전체에서 Drag & Drop 이벤트를 직접 활성화
+        self.setAcceptDrops(True)
         self.setGeometry(x, y, width, height)
 
         self.init_ui()
@@ -309,6 +278,36 @@ class ZoneWidget(QWidget):
         self.panel_layout.addWidget(self.list_widget, 1)
         self.panel_layout.addLayout(self.bottom_layout)
         self.outer_layout.addWidget(self.panel)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        if not event.mimeData().hasUrls():
+            event.ignore()
+            return
+
+        added_any = False
+        for url in event.mimeData().urls():
+            if url.isLocalFile():
+                path = url.toLocalFile()
+                if os.path.exists(path):
+                    self.add_path(path)
+                    added_any = True
+
+        if added_any:
+            event.acceptProposedAction()
+        else:
+            event.ignore()
 
     def add_path(self, path):
         normalized = os.path.normcase(os.path.abspath(path))
