@@ -93,7 +93,7 @@ class DropListWidget(QListWidget):
         super().__init__(zone)
         self.zone = zone
 
-        # 1. IconMode(아이콘 형태) 및 격자 배치 설정
+        # IconMode 설정 및 아이콘 격자 배치
         self.setViewMode(QListWidget.ViewMode.IconMode)
         self.setIconSize(QSize(48, 48))
         self.setGridSize(QSize(76, 80))
@@ -103,12 +103,12 @@ class DropListWidget(QListWidget):
 
         self.setAcceptDrops(True)
         self.setDragEnabled(False)
-        self.setDropIndicatorShown(True)
+        self.setDropIndicatorShown(False)  # IconMode에서 드롭 안정성을 위해 Indicator 비활성화
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setSpacing(4)
         self.itemDoubleClicked.connect(self.open_item)
 
-        # 3. 투명도를 절반 수준(rgba(255,255,255,90))으로 조정
+        # 스타일시트 설정 (투명도 90/255)
         self.setStyleSheet("""
             QListWidget {
                 background: rgba(255, 255, 255, 90);
@@ -128,7 +128,6 @@ class DropListWidget(QListWidget):
         """)
 
     def keyPressEvent(self, event: QKeyEvent):
-        # 2. Delete 키를 눌렀을 때 선택된 항목을 구역 목록에서 제외
         if event.key() == Qt.Key.Key_Delete:
             selected_items = self.selectedItems()
             if selected_items:
@@ -157,13 +156,18 @@ class DropListWidget(QListWidget):
             event.ignore()
             return
 
+        added_any = False
         for url in event.mimeData().urls():
             if url.isLocalFile():
                 path = url.toLocalFile()
                 if os.path.exists(path):
                     self.zone.add_path(path)
+                    added_any = True
 
-        event.acceptProposedAction()
+        if added_any:
+            event.acceptProposedAction()
+        else:
+            event.ignore()
 
     def open_item(self, item):
         path = item.data(Qt.ItemDataRole.UserRole)
@@ -224,7 +228,6 @@ class ZoneWidget(QWidget):
         self._initializing = False
 
     def init_ui(self):
-        # 3. 외곽 여백 및 패널 테두리를 슬림하게 수정
         self.outer_layout = QVBoxLayout(self)
         self.outer_layout.setContentsMargins(2, 2, 2, 2)
         self.outer_layout.setSpacing(2)
