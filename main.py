@@ -176,7 +176,8 @@ class ZoneWidget(QWidget):
         width=260,
         height=320,
     ):
-        super().__init__()
+        # parent를 None으로 설정하여 독립 최상위 윈도우로 동작
+        super().__init__(None)
 
         self.manager = manager
         self.zone_id = zone_id
@@ -189,10 +190,10 @@ class ZoneWidget(QWidget):
         self.resize_save_timer.setInterval(300)
         self.resize_save_timer.timeout.connect(self.save_after_resize)
 
+        # FramelessWindowHint 적용하여 창 테두리 제거
         self.setWindowFlags(
-            Qt.WindowType.Window
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.WindowStaysOnBottomHint
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setMinimumSize(190, 160)
@@ -410,14 +411,13 @@ class ZoneManager(QWidget):
         layout.addWidget(self.save_button)
 
     def calculate_new_position(self):
-        """기존 구역들과 겹치지 않도록 계단식 오프셋 좌표를 계산합니다."""
-        base_x = 100
-        base_y = 100
-        step = 50
-        
+        base_x = 150
+        base_y = 150
+        step = 40
+
         count = len(self.zones)
-        x = base_x + (count * step) % 400
-        y = base_y + (count * step) % 300
+        x = base_x + (count * step) % 500
+        y = base_y + (count * step) % 350
 
         screen = QGuiApplication.primaryScreen()
         if screen:
@@ -446,9 +446,6 @@ class ZoneManager(QWidget):
             zone.load_paths(paths)
 
         zone.show()
-        
-        # 새로 추가된 구역이 잘 보이도록 시각적 처리
-        zone.setWindowState(zone.windowState() & ~Qt.WindowState.WindowMinimized | Qt.WindowState.WindowActive)
         zone.raise_()
         zone.activateWindow()
 
