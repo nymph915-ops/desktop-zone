@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QInputDialog,
 )
 
-# 개발 중에는 .py 파일 옆에, PyInstaller 실행 파일에서는 사용자별 AppData에 저장
 if getattr(sys, "frozen", False):
     app_data = Path(os.environ.get("APPDATA", str(Path.home())))
     APP_DIR = app_data / "DesktopZones"
@@ -36,7 +35,6 @@ CONFIG_FILE = APP_DIR / "zones_config.json"
 
 
 def display_name(path):
-    """파일명 표시: 바로가기(.lnk)는 확장자를 숨긴다."""
     name = Path(path).name
     if name.lower().endswith(".lnk"):
         return name[:-4]
@@ -44,7 +42,6 @@ def display_name(path):
 
 
 def unique_backup_path(path):
-    """기존 백업을 덮어쓰지 않는 백업 파일 경로를 만든다."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     candidate = path.with_name(f"{path.stem}.broken_{timestamp}{path.suffix}")
     counter = 1
@@ -57,8 +54,6 @@ def unique_backup_path(path):
 
 
 class ZoneHeader(QWidget):
-    """버튼을 제외한 제목 표시줄 영역을 드래그해 구역을 이동한다."""
-
     def __init__(self, zone):
         super().__init__(zone)
         self.zone = zone
@@ -95,8 +90,6 @@ class ZoneHeader(QWidget):
 
 
 class DropListWidget(QListWidget):
-    """외부 파일·폴더·바로가기를 끌어다 놓을 수 있는 목록."""
-
     def __init__(self, zone):
         super().__init__(zone)
         self.zone = zone
@@ -174,8 +167,6 @@ class DropListWidget(QListWidget):
 
 
 class ZoneWidget(QWidget):
-    """바탕화면 위에 표시되는 개별 구역 창."""
-
     def __init__(
         self,
         manager,
@@ -199,7 +190,6 @@ class ZoneWidget(QWidget):
         self.resize_save_timer.setInterval(300)
         self.resize_save_timer.timeout.connect(self.save_after_resize)
 
-        # 바탕화면에 고정형 레이어로 배치되도록 WindowStaysOnBottomHint 설정
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.Tool
@@ -374,8 +364,6 @@ class ZoneWidget(QWidget):
 
 
 class ZoneManager(QWidget):
-    """구역 생성 및 전체 설정 저장·복원을 담당하는 관리 창."""
-
     def __init__(self):
         super().__init__()
 
