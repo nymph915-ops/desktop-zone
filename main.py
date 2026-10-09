@@ -93,7 +93,6 @@ class DropListWidget(QListWidget):
         super().__init__(zone)
         self.zone = zone
 
-        # IconMode 설정 및 아이콘 격자 배치
         self.setViewMode(QListWidget.ViewMode.IconMode)
         self.setIconSize(QSize(48, 48))
         self.setGridSize(QSize(76, 80))
@@ -103,12 +102,11 @@ class DropListWidget(QListWidget):
 
         self.setAcceptDrops(True)
         self.setDragEnabled(False)
-        self.setDropIndicatorShown(False)  # IconMode에서 드롭 안정성을 위해 Indicator 비활성화
+        self.setDropIndicatorShown(False)
         self.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self.setSpacing(4)
         self.itemDoubleClicked.connect(self.open_item)
 
-        # 스타일시트 설정 (투명도 90/255)
         self.setStyleSheet("""
             QListWidget {
                 background: rgba(255, 255, 255, 90);
@@ -142,12 +140,14 @@ class DropListWidget(QListWidget):
     def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
+            event.accept()
         else:
             event.ignore()
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
+            event.accept()
         else:
             event.ignore()
 
@@ -166,6 +166,7 @@ class DropListWidget(QListWidget):
 
         if added_any:
             event.acceptProposedAction()
+            event.accept()
         else:
             event.ignore()
 
@@ -221,7 +222,7 @@ class ZoneWidget(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setMinimumSize(190, 160)
-        self.setAcceptDrops(True)
+        self.setAcceptDrops(False)
         self.setGeometry(x, y, width, height)
 
         self.init_ui()
